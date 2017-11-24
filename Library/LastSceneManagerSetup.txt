@@ -1,4 +1,0 @@
-sceneSetups:
-- path: Assets/zk_11_23_Shoot.unity
-  isLoaded: 1
-  isActive: 1
