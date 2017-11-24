@@ -15,7 +15,8 @@ namespace DimensionCollapse
         private bool isFirst; //用于记录这个子弹是否处于即将发射状态
         private LinkedList<Bullet> bulletList; //这个链表和RangedWeapon中武器子弹列表相同，用于更新子弹状态
 
-        private Rigidbody rigidbody;
+        private Rigidbody bulletRigidbody; //辅助归零子弹速度和角速度，节省系统开销
+        private Transform ini; //调试用
         void Awake()
         {
             //子弹没有碰撞体的话，警告!
@@ -28,10 +29,10 @@ namespace DimensionCollapse
             {
                 Debug.Log("子弹没有添加刚体！");
             }
-            rigidbody = GetComponent<Rigidbody>();
+            bulletRigidbody = GetComponent<Rigidbody>();
             isFirst = true;
             this.gameObject.SetActive(false);
-       //     Debug.Log("awake执行!");
+            //     Debug.Log("awake执行!");
         }
         //测试证明调用SetActive不会重新调用Start()
         void Start()
@@ -40,7 +41,7 @@ namespace DimensionCollapse
         }
         void Update()
         {
-         //   Debug.Log("Update调用");
+            //   Debug.Log("Update调用");
             if (isFirst)
             { //如果这个子弹是即将发射状态，那么初始化它的生命周期
                 currentBulletLifeTime = 0;
@@ -59,7 +60,7 @@ namespace DimensionCollapse
                 Bullet tempBullet = this;
                 bulletList.RemoveLast();
                 bulletList.AddFirst(tempBullet);
-          //      Debug.Log("超过生命周期而删除");
+                //      Debug.Log("超过生命周期而删除");
             }
         }
 
@@ -67,20 +68,29 @@ namespace DimensionCollapse
         private void OnCollisionEnter(Collision other)
         {
 
-            //this.gameObject.SetActive(false);
-                   //   Bullet tempBullet = this;
-              //  bulletList.RemoveLast();
-            //    bulletList.AddFirst(tempBullet);
-            //	Debug.Log("触发了碰撞而删除");
+            this.gameObject.SetActive(false);
+            Bullet tempBullet = this;
+            bulletList.RemoveLast();
+            bulletList.AddFirst(tempBullet);
+       /*     foreach (ContactPoint contact in other.contacts)
+            {
+                Debug.DrawLine(ini.position, contact.point, Color.black, 20000, false);
+                Debug.DrawRay(contact.point, contact.normal, Color.yellow);
+            } */
+         //   Debug.Log("触发了碰撞而删除");
         }
 
         public void setInitTransform(Transform initTransform)
         {
-        //    Debug.Log("init执行!");
+            //    Debug.Log("init执行!");
+            ini = initTransform;
             this.transform.position = initTransform.position;
             this.transform.rotation = initTransform.rotation;
-            rigidbody.velocity = Vector3.zero;
-            rigidbody.angularVelocity = Vector3.zero;
+            this.transform.eulerAngles = initTransform.eulerAngles;
+
+            bulletRigidbody.velocity = Vector3.zero;
+            bulletRigidbody.angularVelocity = Vector3.zero;
+
             isFirst = true;
         }
         //获取子弹生命周期，给武器调用

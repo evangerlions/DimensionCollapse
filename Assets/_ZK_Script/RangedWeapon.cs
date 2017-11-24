@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace DimensionCollapse
@@ -16,8 +16,9 @@ namespace DimensionCollapse
         private float currentInterval = float.MaxValue; //上一次射击距离现在的时间，用于实现武器射速限制
 
         private Camera m_Camera; //当前使用的相机，用于将子弹方向对准屏幕中心
-        RaycastHit hitInfo; //将子弹方向对准屏幕中心辅助对象
-        Vector3 targetPoint; //将子弹方向对准屏幕中心辅助对象
+        private RaycastHit hitInfo; //将子弹方向对准屏幕中心辅助对象
+        private Vector3 force; //将子弹方向对准屏幕中心辅助对象
+        private AudioSource Audio_Shoot;
 
         private void Awake()
         {
@@ -30,6 +31,7 @@ namespace DimensionCollapse
             {
                 initBulletList();   //先生成同一时间能存在的最大数量子弹，供发射时调用
             }
+            Audio_Shoot = this.transform.Find("Empty_Gunpoint").gameObject.GetComponent<AudioSource>();
         }
         /// OnGUI is called for rendering and handling GUI events.
         /// This function can be called multiple times per frame (one call per event).
@@ -69,40 +71,51 @@ namespace DimensionCollapse
                     currentInterval = 0;
 
                     CurrentChanger--;
-
-             /*       m_Camera = Camera.main;
-                    if (m_Camera == null) { Debug.Log("null!!!!"); }
+                    //-------------------------------------------朝向准心发射代码----------------------------------------------
+                    m_Camera = Camera.main;
+                    // if (m_Camera == null) { Debug.Log("null!!!!"); }
                     //通过摄像机在屏幕中心点位置发射一条射线  
-                    Ray ray = m_Camera.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2, 0));
+                    Ray ray = m_Camera.ScreenPointToRay(new Vector3(Screen.width >> 1, Screen.height >> 1, 0));
                     if (Physics.Raycast(ray, out hitInfo, 1000))//如果射线碰撞到物体  
                     {
-                        targetPoint = hitInfo.point;//记录碰撞的目标点  
+                        force = hitInfo.point;//记录碰撞的目标点的方向  
                     }
-                    else//射线没有碰撞到目标点  
+                    else
                     {
                         //将目标点设置在摄像机自身前方1000米处  
-                        targetPoint = m_Camera.transform.forward * 1000;
-                    } */
+                        force = m_Camera.transform.forward * 1000;
+                    }
+
+
+                    //---------------------------------------------------------------------------------------------------------
 
                     Transform gunPoint = this.transform.Find("Empty_Gunpoint"); //获取枪口位置，以便发射子弹
 
                     Bullet currentBullet;
                     currentBullet = bulletList.First.Value;
+                    gunPoint.LookAt(this.force);
+                //    Debug.DrawLine(gunPoint.position, force, Color.red, 20000, false);
                     currentBullet.setInitTransform(gunPoint);
                     currentBullet.gameObject.SetActive(true);
 
-                 /*   Vector3 force = targetPoint;
+                    //-----------------------------------朝向准心发射代码-------------------------------------
+                    force -= gunPoint.position;
                     force.Normalize();
-                    force *=  InitialV; */
-                    Vector3 force = gunPoint.forward * InitialV;
+                    force *= InitialV;
+                //    Debug.DrawRay(gunPoint.position,force,Color.green, 20000, false);
+                    //--------------------------------------------------------------------------------------------------
+                    //   Vector3 force = gunPoint.forward * InitialV;
 
                     currentBullet.GetComponent<Rigidbody>().AddForce(force, ForceMode.Impulse);
+
+                    //播放声音
+                    Audio_Shoot.Play();
 
                     Bullet tempBullet = currentBullet;
                     bulletList.RemoveFirst();
                     bulletList.AddLast(tempBullet);
 
-                    Debug.Log("子弹发射！");
+                  //  Debug.Log("子弹发射！");
                 }
                 else
                 {
