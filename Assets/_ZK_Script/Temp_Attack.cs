@@ -4,7 +4,8 @@ using UnityEngine;
 using DimensionCollapse;
 public class Temp_Attack : MonoBehaviour
 {
-    public Weapon gun;
+    public RangedWeapon gun;
+    public RangedWeapon gun2;
 
     // Use this for initialization
     void Start()
@@ -17,14 +18,41 @@ public class Temp_Attack : MonoBehaviour
     {
         if (Input.GetMouseButton(0))
         {
-            gun.Attack();
-        }
-     
-      //临时代码
-            if (Input.GetKeyDown(KeyCode.R))
+            if (gun != null)
             {
-                RangedWeapon gun2 =(RangedWeapon) gun;
-                gun2.newReload();    
+                gun.Attack();
             }
+            if (gun2 != null)
+            {
+                gun2.Attack();
+            }
+
+        }
+
+        //临时代码
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+
+            if (gun != null)
+            {
+                gun.newReload();
+            }
+            if (gun2 != null)
+            {
+                gun2.newReload();
+            }
+        }
+    }
+    private void OnGUI()
+    {
+        if (gun != null)
+        {
+            GUILayout.TextArea(gun.CurrentChanger + "/" + gun.AlternativeCharger, 200);
+        }
+        if (gun2 != null)
+        {
+            GUILayout.TextArea(gun2.CurrentChanger + "/" + gun2.AlternativeCharger, 200);
+        }
+
     }
 }

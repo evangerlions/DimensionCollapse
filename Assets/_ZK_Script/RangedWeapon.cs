@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace DimensionCollapse
@@ -17,29 +19,66 @@ namespace DimensionCollapse
 
         private Camera m_Camera; //当前使用的相机，用于将子弹方向对准屏幕中心
         private RaycastHit hitInfo; //将子弹方向对准屏幕中心辅助对象
+        private Transform gunpoint; //空物体：枪口,子弹实际上从此点进行发射
         private Vector3 force; //将子弹方向对准屏幕中心辅助对象
-        private AudioSource Audio_Shoot;
-
+        private AudioSource Audio_Shoot; //枪声
+        private ParticleSystem ShellParticle; //弹出弹壳特效
+        private ParticleSystem FlashParticle; //枪口闪光特效
         private void Awake()
         {
-            //没有绑定子弹的话，警告！
-            if (TheBullet == null)
-            {
-                Debug.Log("没有绑定子弹！");
-            }
-            else
-            {
-                initBulletList();   //先生成同一时间能存在的最大数量子弹，供发射时调用
-            }
-            Audio_Shoot = this.transform.Find("Empty_Gunpoint").gameObject.GetComponent<AudioSource>();
+            initThisGun();  //进行初始化
+
         }
-        /// OnGUI is called for rendering and handling GUI events.
-        /// This function can be called multiple times per frame (one call per event).
-        /// </summary>
-        void OnGUI()
+        private void initThisGun()
         {
-            GUILayout.TextArea(CurrentChanger + "/" + AlternativeCharger, 200);
+            try
+            {
+                initBulletList();     //先生成同一时间能存在的最大数量子弹，供发射时调用
+            }
+            catch (System.NullReferenceException e)
+            {
+                Debug.Log("此武器没有绑定子弹！" + e);
+            }
+
+            try
+            {
+                //获取枪口位置，以便发射子弹
+                gunpoint = this.transform.Find("Empty_Gunpoint").gameObject.GetComponent<Transform>();
+            }
+            catch (System.NullReferenceException e)
+            {
+                Debug.Log("此武器不含Empty_Gunpoint,也即缺少空物体：枪口 " + e);
+            }
+
+            try
+            {
+                Audio_Shoot = this.transform.Find("Empty_Gunpoint").gameObject.GetComponent<AudioSource>();
+            }
+            catch (System.NullReferenceException e)
+            {
+                Debug.Log("此武器不含Audio_Shoot,也即缺少枪声文件 " + e);
+            }
+
+            try
+            {
+                ShellParticle = this.transform.Find("ShellParticle").gameObject.GetComponent<ParticleSystem>();
+            }
+            catch (System.NullReferenceException e)
+            {
+                Debug.Log("此武器不含ShellParticle，也即没有弹壳弹出特效 " + e);
+            }
+
+            try
+            {
+                FlashParticle = this.transform.Find("FlashParticle").gameObject.GetComponent<ParticleSystem>();
+            }
+
+            catch (System.NullReferenceException e)
+            {
+                Debug.Log("此武器不含FlashParticle，也即没有枪口闪光特效 " + e);
+            }
         }
+
         private void Update()
         {
             if (currentInterval == float.MaxValue)
@@ -52,12 +91,6 @@ namespace DimensionCollapse
                 return;
             }
             currentInterval = float.MaxValue;
-
-
-
-
-
-
         }
         public override void Attack()
         {
@@ -71,9 +104,11 @@ namespace DimensionCollapse
                     currentInterval = 0;
 
                     CurrentChanger--;
-                    //-------------------------------------------朝向准心发射代码----------------------------------------------
+                    //Debug.Log(CurrentChanger);
+
+                    /*-------------------------------------------朝向准心发射代码----------------------------------------------*/
                     m_Camera = Camera.main;
-                    // if (m_Camera == null) { Debug.Log("null!!!!"); }
+                    //if (m_Camera == null) { Debug.Log("null!!!!"); }-
                     //通过摄像机在屏幕中心点位置发射一条射线  
                     Ray ray = m_Camera.ScreenPointToRay(new Vector3(Screen.width >> 1, Screen.height >> 1, 0));
                     if (Physics.Raycast(ray, out hitInfo, 1000))//如果射线碰撞到物体  
@@ -85,39 +120,48 @@ namespace DimensionCollapse
                         //将目标点设置在摄像机自身前方1000米处  
                         force = m_Camera.transform.forward * 1000;
                     }
-
-
-                    //---------------------------------------------------------------------------------------------------------
-
-                    Transform gunPoint = this.transform.Find("Empty_Gunpoint"); //获取枪口位置，以便发射子弹
+                    /*---------------------------------------------------------------------------------------------------------*/
 
                     Bullet currentBullet;
                     currentBullet = bulletList.First.Value;
-                    gunPoint.LookAt(this.force);
-                //    Debug.DrawLine(gunPoint.position, force, Color.red, 20000, false);
-                    currentBullet.setInitTransform(gunPoint);
+                    gunpoint.LookAt(force);
+                    //Debug.DrawLine(gunpoint.position, force, Color.red, 20000, false);
+                    currentBullet.setInitTransform(gunpoint);
                     currentBullet.gameObject.SetActive(true);
 
-                    //-----------------------------------朝向准心发射代码-------------------------------------
-                    force -= gunPoint.position;
+                    /*-------------------------------------------朝向准心发射代码----------------------------------------------*/
+                    force -= gunpoint.position;
                     force.Normalize();
                     force *= InitialV;
-                //    Debug.DrawRay(gunPoint.position,force,Color.green, 20000, false);
-                    //--------------------------------------------------------------------------------------------------
-                    //   Vector3 force = gunPoint.forward * InitialV;
+                    //Debug.DrawRay(gunpoint.position,force,Color.green, 20000, false);
+                    /*---------------------------------------------------------------------------------------------------------*/
 
+                    //   Vector3 force = gunpoint.forward * InitialV;
                     currentBullet.GetComponent<Rigidbody>().AddForce(force, ForceMode.Impulse);
 
                     //播放声音
-                    Audio_Shoot.Play();
+                    if (Audio_Shoot != null)
+                    {
+                        Audio_Shoot.Play();
+                    }
+                    //播放弹壳弹出特效
+                    if (ShellParticle != null)
+                    {
+                        ShellParticle.Play();
+                    }
+                    //播放枪口闪光特效
+                    if (FlashParticle != null)
+                    {
+                        FlashParticle.Play();
+                    }
 
                     Bullet tempBullet = currentBullet;
                     bulletList.RemoveFirst();
                     bulletList.AddLast(tempBullet);
 
-                  //  Debug.Log("子弹发射！");
+                    //Debug.Log("子弹发射！");
                 }
-                else
+                else //否则重装子弹
                 {
                     reload();
                 }
@@ -125,12 +169,17 @@ namespace DimensionCollapse
         }
         private void initBulletList()
         {
-            for (int i = 0; i < (TheBullet.getBulletLifeTime() / Interval) + 1; i++)
+            Bullet newBullet = Instantiate(TheBullet, transform.position, transform.rotation) as Bullet;
+            bulletList.AddLast(newBullet);
+            newBullet.setBulletList(bulletList);
+            float bulletRealLifeTime = newBullet.getBulletRealLifeTime();
+            Debug.Log(bulletRealLifeTime);
+            for (int i = 0; i < bulletRealLifeTime/Interval; i++)
             {
-                Bullet newBullet = Instantiate(TheBullet, transform.position, transform.rotation) as Bullet;
+                newBullet = Instantiate(TheBullet, transform.position, transform.rotation) as Bullet;
                 bulletList.AddLast(newBullet);
                 newBullet.setBulletList(bulletList);
-                //      Debug.Log("i = " + i);
+                //Debug.Log("i = " + i);
             }
         }
         //换弹
@@ -142,7 +191,10 @@ namespace DimensionCollapse
                 //检查备用弹夹有没有子弹
                 if (AlternativeCharger > 0)
                 {
-                    //播放换弹动画，等待换弹间隔                    
+                    //播放换弹动画，等待换弹间隔     
+                    {
+
+                    }
 
                     //备用弹夹有子弹，进行装弹
                     int temp = AlternativeCharger;
