@@ -10,6 +10,7 @@ namespace DimensionCollapse
         public Bullet TheBullet;  //武器所使用的子弹
         public float InitialV; //发射子弹的初始速度:决定射程
         public float Interval; //两次射击间隔：决定射速
+        public float damage; //每发子弹的伤害值
         public int CurrentChanger; //武器正在使用的子弹数量
         public int CurrentChangerCapacity; //武器正在使用的子弹最大容量
         public int AlternativeCharger; //武器备用子弹数量
@@ -27,17 +28,16 @@ namespace DimensionCollapse
         private void Awake()
         {
             initThisGun();  //进行初始化
-
         }
         private void initThisGun()
         {
             try
             {
-                initBulletList();     //先生成同一时间能存在的最大数量子弹，供发射时调用
+                initBulletList();     //先生成同一时间能存在的最大数量子弹的对象池，供发射时调用
             }
             catch (System.NullReferenceException e)
             {
-                Debug.Log("此武器没有绑定子弹！" + e);
+                Debug.Log("此武器：" + name + " 没有绑定子弹！" + e);
             }
 
             try
@@ -47,7 +47,7 @@ namespace DimensionCollapse
             }
             catch (System.NullReferenceException e)
             {
-                Debug.Log("此武器不含Empty_Gunpoint,也即缺少空物体：枪口 " + e);
+                Debug.Log("此武器：" + name + " 不含Empty_Gunpoint,也即缺少空物体：枪口。 " + e);
             }
 
             try
@@ -56,7 +56,7 @@ namespace DimensionCollapse
             }
             catch (System.NullReferenceException e)
             {
-                Debug.Log("此武器不含Audio_Shoot,也即缺少枪声文件 " + e);
+                Debug.Log("此武器：" + name + " 不含Audio_Shoot,也即缺少枪声文件。 " + e);
             }
 
             try
@@ -65,7 +65,7 @@ namespace DimensionCollapse
             }
             catch (System.NullReferenceException e)
             {
-                Debug.Log("此武器不含ShellParticle，也即没有弹壳弹出特效 " + e);
+                Debug.Log("此武器：" + name + " 不含ShellParticle，也即没有弹壳弹出特效。 " + e);
             }
 
             try
@@ -75,7 +75,7 @@ namespace DimensionCollapse
 
             catch (System.NullReferenceException e)
             {
-                Debug.Log("此武器不含FlashParticle，也即没有枪口闪光特效 " + e);
+                Debug.Log("此武器：" + name + " 不含FlashParticle，也即没有枪口闪光特效。 " + e);
             }
         }
 
@@ -126,8 +126,7 @@ namespace DimensionCollapse
                     currentBullet = bulletList.First.Value;
                     gunpoint.LookAt(force);
                     //Debug.DrawLine(gunpoint.position, force, Color.red, 20000, false);
-                    currentBullet.setInitTransform(gunpoint);
-                    currentBullet.gameObject.SetActive(true);
+                    currentBullet.setInitTransformAndDamage(gunpoint,damage);
 
                     /*-------------------------------------------朝向准心发射代码----------------------------------------------*/
                     force -= gunpoint.position;
@@ -169,12 +168,13 @@ namespace DimensionCollapse
         }
         private void initBulletList()
         {
+            TheBullet.gameObject.SetActive(true);   //此行代码不加的话，在子弹的Prefab激活栏中不打勾时，就会出现获取不到子弹生命周期的情况，原因是Prefab不打勾不会在Instantiate后调用Awake()！
             Bullet newBullet = Instantiate(TheBullet, transform.position, transform.rotation) as Bullet;
             bulletList.AddLast(newBullet);
             newBullet.setBulletList(bulletList);
             float bulletRealLifeTime = newBullet.getBulletRealLifeTime();
-            Debug.Log(bulletRealLifeTime);
-            for (int i = 0; i < bulletRealLifeTime/Interval; i++)
+            //Debug.Log("RangedWeapon:" + bulletRealLifeTime);
+            for (int i = 0; i < bulletRealLifeTime / Interval; i++)
             {
                 newBullet = Instantiate(TheBullet, transform.position, transform.rotation) as Bullet;
                 bulletList.AddLast(newBullet);

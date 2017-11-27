@@ -1008,7 +1008,7 @@ MonoBehaviour:
   Picked: 0
   TheBullet: {fileID: 114523114689912646, guid: 141e29725dd25cd4bb01a19c62cf5f4d,
     type: 2}
-  InitialV: 100
+  InitialV: 50
   Interval: 0.1
   CurrentChanger: 30
   CurrentChangerCapacity: 30
