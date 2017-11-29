@@ -10,7 +10,7 @@ namespace DimensionCollapse
         public String BulletName; //子弹的名称
         public int ID; //子弹的ID
         public float BulletLifeTime; //子弹的生命周期，超过这个时间的子弹，将进行删除
-        private float damage;   //子弹的伤害值，由枪赋予
+        private int damage;   //子弹的伤害值，由枪赋予
         private float currentBulletLifeTime; //用于记录当前子弹生命时间
         private bool isFirst; //用于记录这个子弹是否处于即将发射状态
         private LinkedList<Bullet> bulletList; //这个链表和RangedWeapon中武器子弹列表相同，用于更新子弹状态
@@ -19,6 +19,7 @@ namespace DimensionCollapse
         private Transform explosion; //子弹爆炸特效，如果有的话在子弹碰撞到其他物体时显示
         protected float BulletRealLifeTime;    //子弹的实际生命周期，如果子弹在碰撞后还需要显示爆炸动画的话，那么需要将子弹的原始生命周期加上这个动画的持续时间
         private Boolean isDead; //记录子弹是否已经死亡，防止因超过生命周期而删除的子弹重复多次显示渲染粒子特效
+        private AudioSource audioExplosion;   //子弹爆炸特效，如果有的话在执行爆炸特效时播放
         void Awake()
         {
             initThisBullet();
@@ -41,6 +42,7 @@ namespace DimensionCollapse
             //绑定特效
             flying = this.transform.Find("Particle_Flying");
             explosion = this.transform.Find("Particle_Explosion");
+            audioExplosion = this.GetComponent<AudioSource>();
             //先把爆炸的碰撞体隐藏掉，不然爆炸的碰撞体也会在子弹飞行中引发碰撞检测函数,并顺便计算实际生命周期
             if (explosion != null)
             {
@@ -78,7 +80,7 @@ namespace DimensionCollapse
             currentBulletLifeTime += Time.deltaTime;
             if (!isDead) //活着的子弹才进行是否超过生命周期判定
             {
-                isOverLifeTime(); //检测是否超过生命周期
+                isOverLifeTime(); //检测是否超过生命周期  
             }
         }
 
@@ -87,8 +89,13 @@ namespace DimensionCollapse
         {
             if (currentBulletLifeTime > BulletLifeTime)
             {
+                //让子弹停止,很关键的代码~不然要加很多的代码来让爆炸位置不动,就算没有爆炸，这条语句也不会引发错误  
+                bulletRigidbody.isKinematic = true;
                 isDead = true;
-                StopFlyingAndExplode();
+                if (flying != null)
+                {
+                    StopFlyingAndExplode();
+                }
                 StartCoroutine(delayDelete(BulletRealLifeTime - BulletLifeTime));
                 //Debug.Log("超过生命周期而删除");
             }
@@ -98,17 +105,59 @@ namespace DimensionCollapse
         //检测是否进行了碰撞，进行了就删除此子弹,如果有爆炸特效的话，触发爆炸特效
         private void OnCollisionEnter(Collision other)
         {
-            //此判断是为了防止在极端情况下：物体一出现就发生了两次碰撞，而引发错误
-            if (!isDead)
+            //此判断是为了防止在极端情况下：物体一出现就发生了两次碰撞，而引发错误，比如把枪口伸到物体里面
+            if (true || !isDead)
             {
-                StopFlyingAndExplode();
+                //让子弹停止,很关键的代码~不然要加很多的代码来让爆炸位置不动,就算没有爆炸，这条语句也不会引发错误  
+                bulletRigidbody.isKinematic = true;
+
+                Temp_Scarecrow player = other.gameObject.GetComponent<Temp_Scarecrow>();
+                if (flying != null)
+                {
+                    StopFlyingAndExplode();
+
+                    if (explosion != null)
+                    {
+                        //此函数用于判断爆炸范围内有无玩家，有的话就进行扣血
+                        explosionDamage(this.transform.position, (explosion.GetComponent<SphereCollider>().radius) * 1.5f);
+                    }
+                }
+                else
+                {
+                    //临时扣血代码
+                    if (player != null)
+                    {
+                        player.OnAttacked(this.damage, other.contacts[0]);
+                        //Debug.Log("OnAttacked执行！");
+                        player = null;
+                    }
+                }
+
                 StartCoroutine(delayDelete(BulletRealLifeTime - BulletLifeTime));
-                //Debug.Log("触发了碰撞而删除");
             }
             isDead = true;
-
         }
+        //此函数用于判断爆炸范围内有无玩家，有的话就进行扣血
+        private void explosionDamage(Vector3 center, float radius)
+        {
+            Debug.Log("center: " + center + "radius"  + radius);
+            Collider[] colliders = Physics.OverlapSphere(center, radius);//此函数用于检测周围球形范围内碰撞体，后期可加入LayoutMask用于筛选
+            //没有碰撞体直接返回
+            if (colliders.Length <= 0)
+            {
+                return;
+            }
 
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                Temp_Scarecrow scarecrow = colliders[i].gameObject.GetComponent<Temp_Scarecrow>();
+                if (scarecrow != null)
+                {
+                    scarecrow.OnAttacked(this.damage);
+                }
+                Debug.Log(colliders[i].gameObject.name);
+            }
+        }
         private IEnumerator delayDelete(float delayTime)
         {
             //等待延迟时间
@@ -121,7 +170,7 @@ namespace DimensionCollapse
             bulletList.AddFirst(tempBullet);
             this.gameObject.SetActive(false);
         }
-        public void setInitTransformAndDamage(Transform initTransform,float damage)
+        public void setInitTransformAndDamage(Transform initTransform, int damage)
         {
             this.damage = damage;
 
@@ -129,6 +178,8 @@ namespace DimensionCollapse
             this.transform.position = initTransform.position;
             this.transform.rotation = initTransform.rotation;
             this.transform.eulerAngles = initTransform.eulerAngles;
+
+            this.GetComponent<Collider>().enabled = true; //启用物体本身的碰撞体            
 
             bulletRigidbody.velocity = Vector3.zero;
             bulletRigidbody.angularVelocity = Vector3.zero;
@@ -139,9 +190,6 @@ namespace DimensionCollapse
             }
             isDead = false;
             isFirst = true;
-
-
-
         }
         //获取子弹生命周期，给武器调用
         public float getBulletRealLifeTime()
@@ -155,23 +203,34 @@ namespace DimensionCollapse
         //停止飞行粒子特效并且触发爆炸特效
         private void StopFlyingAndExplode()
         {
-            bulletRigidbody.isKinematic = true; //让子弹停止,很关键的代码~不然要加很多的代码来让爆炸位置不动~            
-            if (flying != null)
+            flying.GetComponent<ParticleSystem>().Stop();
+            flying.gameObject.SetActive(false);
+            if (explosion != null)
             {
-                flying.GetComponent<ParticleSystem>().Stop();
-                flying.gameObject.SetActive(false);
-                if (explosion != null)
+
+                explosion.GetComponent<ParticleSystem>().Play(); //爆炸特效显示
+
+                //调用爆炸碰撞体控制函数，现在的思路是碰撞发生后，将碰撞体残留0.2秒，然后消除，不然会在爆炸地点一直存在一个球状空气墙
+                StartCoroutine(explosionCollisionControler());
+
+                if (audioExplosion != null)
                 {
-                    explosion.GetComponent<Collider>().enabled = true;
-                    explosion.GetComponent<ParticleSystem>().Play();
-                    explosion.GetComponent<Collider>().enabled = false;
+                    audioExplosion.Play(); //如果有的话，播放爆炸声音
                 }
             }
+
         }
-        //获取子弹伤害值，给人物调用
-        public float getDamage()
+
+        private IEnumerator explosionCollisionControler()
         {
-            return damage;
+            this.GetComponent<Collider>().enabled = false; //禁用物体本身的碰撞体
+            explosion.GetComponent<Collider>().enabled = true; //启动爆炸的碰撞体
+            for (float i = 0; i < 0.1; i += Time.deltaTime)
+            {
+                // Debug.Log("explosion Exist");
+                yield return 0;
+            }
+            explosion.GetComponent<Collider>().enabled = false; //消除爆炸的碰撞体
         }
     }
 }

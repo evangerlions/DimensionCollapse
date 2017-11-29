@@ -105,6 +105,7 @@ GameObject:
   - component: {fileID: 114642547419059142}
   - component: {fileID: 54592175671464050}
   - component: {fileID: 135648541234967286}
+  - component: {fileID: 82392536318026542}
   m_Layer: 0
   m_Name: WileyBullet
   m_TagString: Untagged
@@ -224,7 +225,6 @@ GameObject:
   serializedVersion: 5
   m_Component:
   - component: {fileID: 4785531862046252}
-  - component: {fileID: 135156559857912104}
   - component: {fileID: 199319401336520072}
   - component: {fileID: 198756071878099544}
   m_Layer: 0
@@ -445,6 +445,86 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!82 &82392536318026542
+AudioSource:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1559378040371224}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 8300000, guid: ae0b174e7ca1b0f41b3c6b7a19001aa8, type: 3}
+  m_PlayOnAwake: 0
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 150
+  Pan2D: 0
+  rolloffMode: 2
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    - serializedVersion: 2
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 2
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 0
 --- !u!96 &96128602180566700
 TrailRenderer:
   serializedVersion: 2
@@ -595,19 +675,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   BulletName: WileyBullet
   ID: 4
-  BulletLifeTime: 5
---- !u!135 &135156559857912104
-SphereCollider:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1936739539235000}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Radius: 0.14
-  m_Center: {x: 0, y: 0.00000023841858, z: 0}
+  BulletLifeTime: 2
 --- !u!135 &135242282697654664
 SphereCollider:
   m_ObjectHideFlags: 1
@@ -3937,7 +4005,7 @@ ParticleSystem:
   moveWithTransform: 0
   moveWithCustomTransform: {fileID: 0}
   scalingMode: 0
-  randomSeed: 1487434363
+  randomSeed: 145903289
   InitialModule:
     serializedVersion: 3
     enabled: 1
@@ -10461,7 +10529,7 @@ ParticleSystem:
   moveWithTransform: 0
   moveWithCustomTransform: {fileID: 0}
   scalingMode: 0
-  randomSeed: -1923003773
+  randomSeed: 1707749230
   InitialModule:
     serializedVersion: 3
     enabled: 1
@@ -13721,7 +13789,7 @@ ParticleSystem:
   moveWithTransform: 1
   moveWithCustomTransform: {fileID: 0}
   scalingMode: 0
-  randomSeed: -475898917
+  randomSeed: 1072932153
   InitialModule:
     serializedVersion: 3
     enabled: 1
@@ -23735,7 +23803,7 @@ ParticleSystem:
   moveWithTransform: 0
   moveWithCustomTransform: {fileID: 0}
   scalingMode: 1
-  randomSeed: 967928788
+  randomSeed: 1979143486
   InitialModule:
     serializedVersion: 3
     enabled: 1
@@ -30558,7 +30626,7 @@ ParticleSystem:
   moveWithTransform: 0
   moveWithCustomTransform: {fileID: 0}
   scalingMode: 1
-  randomSeed: -1019942555
+  randomSeed: 1777074091
   InitialModule:
     serializedVersion: 3
     enabled: 1

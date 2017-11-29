@@ -10,7 +10,7 @@ namespace DimensionCollapse
         public Bullet TheBullet;  //武器所使用的子弹
         public float InitialV; //发射子弹的初始速度:决定射程
         public float Interval; //两次射击间隔：决定射速
-        public float damage; //每发子弹的伤害值
+        public int damage; //每发子弹的伤害值
         public int CurrentChanger; //武器正在使用的子弹数量
         public int CurrentChangerCapacity; //武器正在使用的子弹最大容量
         public int AlternativeCharger; //武器备用子弹数量
@@ -65,7 +65,7 @@ namespace DimensionCollapse
             }
             catch (System.NullReferenceException e)
             {
-                Debug.Log("此武器：" + name + " 不含ShellParticle，也即没有弹壳弹出特效。 " + e);
+                //Debug.Log("此武器：" + name + " 不含ShellParticle，也即没有弹壳弹出特效。 " + e);
             }
 
             try
@@ -75,7 +75,7 @@ namespace DimensionCollapse
 
             catch (System.NullReferenceException e)
             {
-                Debug.Log("此武器：" + name + " 不含FlashParticle，也即没有枪口闪光特效。 " + e);
+                //Debug.Log("此武器：" + name + " 不含FlashParticle，也即没有枪口闪光特效。 " + e);
             }
         }
 
