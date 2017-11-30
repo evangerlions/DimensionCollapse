@@ -61,7 +61,7 @@ namespace DimensionCollapse
 
             try
             {
-                ShellParticle = this.transform.Find("ShellParticle").gameObject.GetComponent<ParticleSystem>();
+                ShellParticle = this.transform.Find("Particle_Shell").gameObject.GetComponent<ParticleSystem>();
             }
             catch (System.NullReferenceException e)
             {
@@ -70,7 +70,7 @@ namespace DimensionCollapse
 
             try
             {
-                FlashParticle = this.transform.Find("FlashParticle").gameObject.GetComponent<ParticleSystem>();
+                FlashParticle = this.transform.Find("Particle_Flash").gameObject.GetComponent<ParticleSystem>();
             }
 
             catch (System.NullReferenceException e)

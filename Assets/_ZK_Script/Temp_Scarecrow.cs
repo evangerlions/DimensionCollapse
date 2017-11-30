@@ -46,7 +46,7 @@ namespace DimensionCollapse
             this.health -= primaryDamge;
         }
 
-
+        /* 
         private void OnCollisionEnter(Collision other)
         {
             Debug.Log("It is from Scarecrow's OnCollisionEnter function");
@@ -60,5 +60,6 @@ namespace DimensionCollapse
         {
             Debug.Log("It is from Scarecrow's OnCollisionExit function");
         }
+        */
     }
 }

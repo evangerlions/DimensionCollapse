@@ -118,8 +118,18 @@ namespace DimensionCollapse
 
                     if (explosion != null)
                     {
+
+
+                        SphereCollider thisSphereCollider = explosion.GetComponent<SphereCollider>();
                         //此函数用于判断爆炸范围内有无玩家，有的话就进行扣血
-                        explosionDamage(this.transform.position, (explosion.GetComponent<SphereCollider>().radius) * 1.5f);
+                        explosionDamage(thisSphereCollider.transform.TransformPoint(thisSphereCollider.center), thisSphereCollider.bounds.size.x / 2);
+
+                        /* 精确测试爆炸范围代码 
+                        GameObject testSphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                        testSphere.GetComponent<Collider>().enabled = false;
+                        testSphere.transform.localScale = thisSphereCollider.bounds.size ;
+                        testSphere.transform.position =  thisSphereCollider.transform.TransformPoint(thisSphereCollider.center);
+                        */
                     }
                 }
                 else
@@ -132,15 +142,18 @@ namespace DimensionCollapse
                         player = null;
                     }
                 }
-
-                StartCoroutine(delayDelete(BulletRealLifeTime - BulletLifeTime));
+                //此判断是为了防止子弹在某些情况下能触发两个碰撞（比如把枪口伸到物体里面），就会调用两次本函数，那么第二次的碰撞就会因为物体是非激活状态而引发错误
+                if (this.gameObject.activeInHierarchy == true)
+                {
+                    StartCoroutine(delayDelete(BulletRealLifeTime - BulletLifeTime));
+                }
             }
             isDead = true;
         }
-        //此函数用于判断爆炸范围内有无玩家，有的话就进行扣血
+        //此函数用于判断爆炸范围内有无玩家，有的话就进行扣血, 参数：center-圆心坐标（世界坐标系），radius-半径
         private void explosionDamage(Vector3 center, float radius)
         {
-            Debug.Log("center: " + center + "radius"  + radius);
+            Debug.Log("center: " + center + "radius" + radius);
             Collider[] colliders = Physics.OverlapSphere(center, radius);//此函数用于检测周围球形范围内碰撞体，后期可加入LayoutMask用于筛选
             //没有碰撞体直接返回
             if (colliders.Length <= 0)
@@ -153,9 +166,13 @@ namespace DimensionCollapse
                 Temp_Scarecrow scarecrow = colliders[i].gameObject.GetComponent<Temp_Scarecrow>();
                 if (scarecrow != null)
                 {
-                    scarecrow.OnAttacked(this.damage);
+                    //计算下人物所要受到的伤害，目前使用简单线性关系：y =100 * （1 - x） ，y是受到的伤害量，x是两点间距离占球形碰撞体半径的百分比，
+                    //0代表在圆心爆炸，受到满额100点伤害，1代表在边缘处爆炸，受到0点伤害
+                    int currentDamage = (int)(this.damage * (1 - (Vector3.Distance(scarecrow.transform.position, center) / radius)));
+                    Debug.Log("this.damage:" + this.damage + ",distance:" + Vector3.Distance(scarecrow.transform.position, center) + ",radius:" + radius + ",percentage:" + (Vector3.Distance(scarecrow.transform.position, center) / radius));
+                    scarecrow.OnAttacked(currentDamage);
                 }
-                Debug.Log(colliders[i].gameObject.name);
+                //Debug.Log(colliders[i].gameObject.name);
             }
         }
         private IEnumerator delayDelete(float delayTime)
@@ -165,6 +182,7 @@ namespace DimensionCollapse
             {
                 yield return 0;
             }
+
             Bullet tempBullet = this;
             bulletList.RemoveLast();
             bulletList.AddFirst(tempBullet);
@@ -172,9 +190,10 @@ namespace DimensionCollapse
         }
         public void setInitTransformAndDamage(Transform initTransform, int damage)
         {
+            this.gameObject.SetActive(true);
+
             this.damage = damage;
 
-            this.gameObject.SetActive(true);
             this.transform.position = initTransform.position;
             this.transform.rotation = initTransform.rotation;
             this.transform.eulerAngles = initTransform.eulerAngles;
